@@ -1,26 +1,90 @@
 #!/bin/bash
 
-directory="$HOME/syncthing/H/Z_H-Videos";
+currentl_directory=".";
+yes="";
 
-\ls $directory > file_list;
+function yes_or_no {
+	local prompt="$1"
+	yes=0;
+	local attempts=0;
 
-i=0;
 
-rm file_list_new;
+	while [ "$attempts" -lt 3 ]; do 
+		echo "y/n";
+		sleep 1;
+		read -r yn;
+		case $yn in
+			y)
+				yes=1;
+				return;
+				;;
+			n)
+				yes=2;
+				return;
+				;;
+			*)
+                        	echo "Nieznana opcja, jeżeli chcesz zamknąć wciśnij q"
+				attempts=$((attempts+1));	
+				;;
+		esac
+	done
 
-while read line
-do
-        
-        new=${line// /-};
-        new=${new//_/-};
-        new=${new//,/-};
+	echo "Błąd";
+	exit 1;
+}
 
-        new=${new//---/-};
-        new=${new//--/-};
-        new=${new//-./-};
 
-        echo -e "$line\n$new" >> file_list_new;
+function auto {
+        echo -e "Czy zamienić automatycznie";
+	yes_or_no;
 
-done < file_list
+        case "$yes" in
+                1)
+                        replace_auto;
+			;;
+                2)
+                        replace_man;
+                        ;;
+        esac
+}
 
-rm file_list;
+function replace_auto {
+	while read -r line
+	do
+		local new=${line// /-};
+        	new=${new//_/-};
+        	new=${new//,/-};
+        	new=${new//---/-};
+        	new=${new//--/-};
+        	new=${new//-./-};
+
+		if [ "$line" != "$new" ]; then
+                	echo -e "$line\n|\nV\n$new\n$separator"
+       		fi
+	done < list
+}
+
+function replace_man {
+        while read -r line
+        do
+                local new=${line// /-};
+                new=${new//_/-};
+                new=${new//,/-};
+                new=${new//---/-};
+                new=${new//--/-};
+                new=${new//-./-};
+
+                if [ "$line" != "$new" ]; then
+                        echo -e "Czy zamienić:\n$line\nna\n$new"
+			yes_or_no;
+			if [ "$yes" -eq "1" ]; then
+				echo "nazwa zmieniona"
+			fi
+                fi
+	done < list
+}
+
+
+\ls $currentl_directory > list;
+auto;
+
