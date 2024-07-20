@@ -55,7 +55,6 @@ function replace {
         new=${new//,/-}
         new=${new//---/-}
         new=${new//--/-}
-        new=${new//-./-}
 
         if [ "$file" != "$new" ]; then
             if [ "$auto" -eq "1" ]; then
