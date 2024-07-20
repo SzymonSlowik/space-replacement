@@ -70,6 +70,7 @@ function replace {
                     mv "$file" "$new"
                 fi
             fi
+	    echo "Wszystkie nazwy zmienione"
         fi
     done
 }
