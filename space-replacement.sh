@@ -1,90 +1,80 @@
 #!/bin/bash
 
-currentl_directory=".";
-yes="";
+yes=""
+auto=""
 
 function yes_or_no {
-	local prompt="$1"
-	yes=0;
-	local attempts=0;
+    yes=0
+    local attempts=0
 
-
-	while [ "$attempts" -lt 3 ]; do 
-		echo "y/n";
-		sleep 1;
-		read -r yn;
-		case $yn in
-			y)
-				yes=1;
-				return;
-				;;
-			n)
-				yes=2;
-				return;
-				;;
-			*)
-                        	echo "Nieznana opcja, jeżeli chcesz zamknąć wciśnij q"
-				attempts=$((attempts+1));	
-				;;
-		esac
-	done
-
-	echo "Błąd";
-	exit 1;
-}
-
-
-function auto {
-        echo -e "Czy zamienić automatycznie";
-	yes_or_no;
-
-        case "$yes" in
-                1)
-                        replace_auto;
-			;;
-                2)
-                        replace_man;
-                        ;;
+    while [ "$attempts" -lt 3 ]; do 
+        echo "y/n"
+        read -r yn
+        case "$yn" in
+            y)
+                yes=1
+                return
+                ;;
+            n)
+                yes=2
+                return
+                ;;
+            *)
+                echo "Nieznana opcja"
+                attempts=$((attempts+1))    
+                ;;
         esac
+    done
+
+    echo "Błąd"
+    exit 1
 }
 
-function replace_auto {
-	while read -r line
-	do
-		local new=${line// /-};
-        	new=${new//_/-};
-        	new=${new//,/-};
-        	new=${new//---/-};
-        	new=${new//--/-};
-        	new=${new//-./-};
+function automatic {
+    echo -e "Czy zamienić automatycznie?"
+    yes_or_no
 
-		if [ "$line" != "$new" ]; then
-                	echo -e "$line\n|\nV\n$new\n$separator"
-       		fi
-	done < list
+    case "$yes" in
+        1)
+            auto=1
+            ;;
+        2)
+            auto=0
+            ;;
+    esac
 }
 
-function replace_man {
-        while read -r line
-        do
-                local new=${line// /-};
-                new=${new//_/-};
-                new=${new//,/-};
-                new=${new//---/-};
-                new=${new//--/-};
-                new=${new//-./-};
+function replace {
+    for file in *; do
+        if [ -d "$file" ]; then
+            continue
+        fi
 
-                if [ "$line" != "$new" ]; then
-                        echo -e "Czy zamienić:\n$line\nna\n$new"
-			yes_or_no;
-			if [ "$yes" -eq "1" ]; then
-				echo "nazwa zmieniona"
-			fi
+        local new=${file// /-}
+        new=${new//_/-}
+        new=${new//,/-}
+        new=${new//---/-}
+        new=${new//--/-}
+        new=${new//-./-}
+
+        if [ "$file" != "$new" ]; then
+            if [ "$auto" -eq "1" ]; then
+                echo -e "zamiana:\n$file\nna:\n$new\n"
+                mv "$file" "$new"
+
+            elif [ "$auto" -eq "0" ]; then
+                echo -e "Czy zamienić:\n$file\nna\n$new?"
+                yes_or_no < /dev/tty # Wczytuje tylko dane z klawiatury
+
+                if [ "$yes" -eq "1" ]; then
+                    echo "nazwa zmieniona"
+                    mv "$file" "$new"
                 fi
-	done < list
+            fi
+        fi
+    done
 }
 
-
-\ls $currentl_directory > list;
-auto;
+automatic
+replace
 
